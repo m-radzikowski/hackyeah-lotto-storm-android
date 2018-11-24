@@ -1,6 +1,7 @@
 package com.blasthack.storm.lottostorm
 
 import android.util.Log
+import com.blasthack.storm.lottostorm.dto.LotteryWinner
 import com.blasthack.storm.lottostorm.dto.Storm
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -13,14 +14,20 @@ class StormBackendWebSocketListener(var listener: StormEventListener) : WebSocke
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {
         Log.d("SOCKET", "Receiving : " + text!!)
-
         val moshi = Moshi.Builder()
             .add(KotlinJsonAdapterFactory())
             .build()
-        val stormAdapter = moshi.adapter(Array<Storm>::class.java)
-        val storms: Array<Storm>? = stormAdapter.fromJson(text)
-        storms!!.forEach {
-            listener.onStormChanged(it)
+
+        if (text[0] == '[') {
+            val stormAdapter = moshi.adapter(Array<Storm>::class.java)
+            val storms: Array<Storm>? = stormAdapter.fromJson(text)
+            storms!!.forEach {
+                listener.onStormChanged(it)
+            }
+        } else {
+            val winnerAdapter = moshi.adapter(LotteryWinner::class.java)
+            val winner: LotteryWinner? = winnerAdapter.fromJson(text)
+            listener.onStormWon(winner!!)
         }
     }
 
@@ -35,6 +42,7 @@ class StormBackendWebSocketListener(var listener: StormEventListener) : WebSocke
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
         Log.d("SOCKET", "Fail")
+        listener.onConnectionFailed()
         super.onFailure(webSocket, t, response)
     }
 }

@@ -28,6 +28,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'com.shawnlin:number-picker:2.4.7'
+    implementation 'com.androidadvance:topsnackbar:1.1.1'
 
     implementation 'com.google.android.gms:play-services-maps:16.0.0'
     implementation 'com.google.maps.android:android-maps-utils:0.5+'

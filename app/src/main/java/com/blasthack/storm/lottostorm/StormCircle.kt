@@ -44,4 +44,8 @@ class StormCircle(
             position(centerPosition, 100000f, 65000f)
         })
     }
+
+    fun removeFromMap() {
+        storm.remove()
+    }
 }

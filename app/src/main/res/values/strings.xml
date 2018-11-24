@@ -7,4 +7,8 @@
     <string name="lottery_play">Zagraj</string>
     <string name="lottery_cancel">Cancel</string>
     <string name="lottery_inform">Powiadom innych o burzy</string>
+    <string name="lottery_finished">Wyłoniony zwycięzca</string>
+
+    <string name="connection_failed">Utracono połączenie</string>
+    <string name="reconnect">Połącz</string>
 </resources>
