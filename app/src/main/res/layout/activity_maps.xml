@@ -13,6 +13,16 @@
             tools:context=".MapsActivity"
             android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
+    <com.google.android.material.chip.Chip
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Powiadom o burzy"
+            app:chipStrokeColor="@android:color/black"
+            app:chipBackgroundColor="@android:color/white"
+            android:padding="4dp"
+            android:layout_margin="8dp"
+            android:textColor="@android:color/holo_red_dark"/>
+
     <!-- It will NOT work without the style applied -->
     <com.google.android.material.button.MaterialButton
             android:id="@+id/fab"
@@ -24,7 +34,7 @@
             android:elevation="6dp"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
-            android:text="@string/enter_lottery"
+            android:text="@string/lottery_enter"
             android:textAllCaps="true"
             android:textColor="@android:color/white"
             android:textSize="14sp"

@@ -5,7 +5,6 @@ import okhttp3.WebSocketListener
 import okhttp3.WebSocket
 import okio.ByteString
 
-
 class StormBackendWebSocketListener : WebSocketListener() {
 
     override fun onMessage(webSocket: WebSocket?, text: String?) {

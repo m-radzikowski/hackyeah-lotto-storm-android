@@ -1,7 +1,11 @@
 <resources>
-    <string name="app_name">LottoStorm</string>
+    <string name="app_name">Burza Hajsu</string>
     <string name="title_activity_maps">Map</string>
-    <string name="enter_lottery">Spróbuj szczęścia!</string>
+
+    <string name="lottery_enter">Spróbuj szczęścia!</string>
+    <string name="lottery_ask">Potwierdź udział</string>
+    <string name="lottery_play">Zagraj</string>
+    <string name="lottery_cancel">Cancel</string>
 
     <string name="pattern_dashed">Dashed</string>
     <string name="pattern_dotted">Dotted</string>
