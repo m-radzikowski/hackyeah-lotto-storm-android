@@ -1,31 +1,43 @@
 package com.blasthack.storm.lottostorm
 
-import android.graphics.Color
+import android.content.Context
+import android.graphics.*
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.model.Circle
-import com.google.android.gms.maps.model.CircleOptions
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
+import androidx.core.content.ContextCompat
+
 
 class StormCircle(
-    var centerPosition: LatLng
+    private var context: Context,
+    private var centerPosition: LatLng
 ) {
-    private val circleOptions = CircleOptions().apply {
-        radius(50000.0)
-        center(centerPosition)
-        strokeWidth(5.0f)
-        strokeColor(Color.HSVToColor(floatArrayOf(120f, 100f, 100f)))
-        fillColor(Color.HSVToColor(150, floatArrayOf(120f, 100f, 100f)))
-        //strokePattern(getSelectedPattern(strokePatternSpinner.selectedItemPosition))
-    }
 
-    private lateinit var circle: Circle
+    private lateinit var storm: GroundOverlay
 
     fun setCenter(center: LatLng) {
         centerPosition = center
-        circle.center = center
+        storm.position = center
+    }
+
+    fun addRotation() {
+        storm.bearing = storm.bearing + 1
     }
 
     fun addToMap(map: GoogleMap) {
-        circle = map.addCircle(this.circleOptions)
+        val bitmap = BitmapFactory
+            .decodeResource(context.resources, R.drawable.cloud)
+            .copy(Bitmap.Config.ARGB_8888, true)
+
+        val paint = Paint()
+        val filter = PorterDuffColorFilter(ContextCompat.getColor(context, R.color.colorAccent), PorterDuff.Mode.SRC_IN)
+        paint.colorFilter = filter
+
+        val canvas = Canvas(bitmap)
+        canvas.drawBitmap(bitmap, 0f, 0f, paint)
+
+        storm = map.addGroundOverlay(GroundOverlayOptions().apply {
+            image(BitmapDescriptorFactory.fromBitmap(bitmap))
+            position(centerPosition, 100000f, 65000f)
+        })
     }
 }

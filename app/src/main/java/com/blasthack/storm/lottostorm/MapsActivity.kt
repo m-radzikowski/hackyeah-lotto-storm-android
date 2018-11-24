@@ -3,7 +3,6 @@ package com.blasthack.storm.lottostorm
 import android.app.Dialog
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Window
 import android.widget.Toast
 
@@ -18,6 +17,7 @@ import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 import okhttp3.OkHttpClient
 import okhttp3.Request
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
@@ -48,12 +48,13 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         val listener = StormBackendWebSocketListener()
         val request = Request.Builder().url(Config.WEBSOCKET_ADDRESS).build()
         client.newWebSocket(request, listener)
+
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        storm = StormCircle(globalExpo)
+        storm = StormCircle(this, globalExpo)
         storm.addToMap(mMap)
 
         Timer("StormMockTimer", false).scheduleAtFixedRate(0, (1000 * 0.2).toLong()) {
@@ -61,7 +62,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
                 globalExpo = LatLng(globalExpo.latitude + 0.0025, globalExpo.longitude + 0.0025)
                 runOnUiThread {
                     storm.setCenter(globalExpo)
-                    Log.d("MAPS", "Updated storm location")
+                    storm.addRotation()
+
+                    //Log.d("MAPS", "Updated storm location")
                 }
             }
         }

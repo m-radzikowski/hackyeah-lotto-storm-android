@@ -2,7 +2,7 @@ package com.blasthack.storm.lottostorm
 
 class Config {
     companion object {
-        const val SERVER_ADDRESS = "10.250.194.196"
+        const val SERVER_ADDRESS = "192.168.43.55:90"
         const val WEBSOCKET_ADDRESS = "ws://$SERVER_ADDRESS/storm?client"
     }
 }
