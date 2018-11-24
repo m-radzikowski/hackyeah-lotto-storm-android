@@ -28,7 +28,7 @@
     <!-- It will NOT work without the style applied -->
     <com.google.android.material.button.MaterialButton
             android:id="@+id/fab"
-            android:layout_width="wrap_content"
+            android:layout_width="250dp"
             android:layout_height="64dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"

@@ -9,6 +9,7 @@ import androidx.core.content.ContextCompat
 
 class StormCircle(
     private var context: Context,
+    var id: String,
     private var centerPosition: LatLng
 ) {
 
@@ -29,7 +30,10 @@ class StormCircle(
             .copy(Bitmap.Config.ARGB_8888, true)
 
         val paint = Paint()
-        val filter = PorterDuffColorFilter(ContextCompat.getColor(context, R.color.colorAccent), PorterDuff.Mode.SRC_IN)
+        val filter = PorterDuffColorFilter(
+            ContextCompat.getColor(context, android.R.color.holo_red_dark),
+            PorterDuff.Mode.SRC_IN
+        )
         paint.colorFilter = filter
 
         val canvas = Canvas(bitmap)

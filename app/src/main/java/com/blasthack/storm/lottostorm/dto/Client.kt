@@ -1,4 +1,4 @@
-package com.blasthack.storm.lottostorm
+package com.blasthack.storm.lottostorm.dto
 
 data class Client(
     val name: String,
