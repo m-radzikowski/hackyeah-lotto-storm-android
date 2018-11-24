@@ -1,4 +1,10 @@
 <resources>
     <string name="app_name">LottoStorm</string>
     <string name="title_activity_maps">Map</string>
+    <string name="enter_lottery">Spróbuj szczęścia!</string>
+
+    <string name="pattern_dashed">Dashed</string>
+    <string name="pattern_dotted">Dotted</string>
+    <string name="pattern_mixed">Mixed</string>
+    <string name="pattern_solid">Solid</string>
 </resources>

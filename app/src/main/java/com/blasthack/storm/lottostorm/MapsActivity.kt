@@ -1,43 +1,66 @@
 package com.blasthack.storm.lottostorm
 
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.*
+import java.util.*
+import kotlin.concurrent.scheduleAtFixedRate
+import okhttp3.OkHttpClient
+import okhttp3.Request
+
 
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
+    private val DEFAULT_SCALE = 1000.0
+    private val DEFAULT_RADIUS_METERS = 1000000.0
+
+    private var globalExpo = LatLng(52.2922104, 21.0023798)
+    private var globalExpoLocation: CameraPosition = CameraPosition.Builder()
+        .target(globalExpo)
+        .zoom(8.0f)
+        .build()
+
+    private lateinit var storm: StormCircle
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        val mapFragment = supportFragmentManager
-            .findFragmentById(R.id.map) as SupportMapFragment
+
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
+
+
+        val client = OkHttpClient()
+        val listener = StormBackendWebSocketListener()
+        val request = Request.Builder().url(Config.WEBSOCKET_ADDRESS).build()
+        client.newWebSocket(request, listener)
     }
 
-    /**
-     * Manipulates the map once available.
-     * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
-     * If Google Play services is not installed on the device, the user will be prompted to install
-     * it inside the SupportMapFragment. This method will only be triggered once the user has
-     * installed Google Play services and returned to the app.
-     */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
 
-        // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        storm = StormCircle(globalExpo)
+        storm.addToMap(mMap)
+
+        Timer("StormMockTimer", false).scheduleAtFixedRate(0, (1000 * 0.2).toLong()) {
+            if (::storm.isInitialized) {
+                runOnUiThread {
+                    globalExpo = LatLng(globalExpo.latitude + 0.0025, globalExpo.longitude + 0.0025)
+                    storm.setCenter(globalExpo)
+
+                    Log.d("MAPS", "Updated storm location")
+                }
+            }
+        }
+
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(globalExpoLocation))
     }
 }
