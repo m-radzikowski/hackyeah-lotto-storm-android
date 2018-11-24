@@ -1,11 +1,13 @@
 package com.blasthack.storm.lottostorm
 
 import android.app.Dialog
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.Window
 import android.widget.Toast
+import com.blasthack.storm.lottostorm.service.NotifyFriendActivity
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -40,7 +42,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         fab.setOnClickListener {
             showDialog()
         }
-
+        notifyStorm.setOnClickListener {
+            val intent = Intent(applicationContext, NotifyFriendActivity::class.java)
+            startActivity(intent)
+        }
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
