@@ -35,8 +35,38 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
         fetchData()
 
         addFriend.setOnClickListener {
+            addFriendDialog()
+        }
+        val layoutManager = LinearLayoutManager(this)
+        var sceneAdapter = FriendsListViewAdapter(this.applicationContext, friends)
+        sceneAdapter.setClickListener(this)
 
-            StormBackendService.create(StormRepository::class.java).find(FriendUserName(friendName.text.toString()))                .subscribeOn(
+
+        list_rv.layoutManager = layoutManager
+        list_rv.adapter = sceneAdapter
+
+
+    }
+
+    fun addFriendDialog(){
+        val builder = AlertDialog.Builder(this)
+
+        // Set the alert dialog title
+        builder.setTitle("Dodaj znajomego")
+
+
+        val inflater = layoutInflater
+        val dialogLayout = inflater.inflate(R.layout.alert_dialog, null)
+        val editText  = dialogLayout.findViewById<EditText>(R.id.editText)
+        editText.hint = "Podaj nazwę użytkownika"
+        builder.setView(dialogLayout)
+        // Display a negative button on alert dialog
+        builder.setNegativeButton("Nie"){dialog,which ->
+            Toast.makeText(applicationContext,"Anulowano",Toast.LENGTH_SHORT).show()
+        }
+        builder.setPositiveButton("Tak"){dialog, which ->
+            val text = editText.text.toString()
+            StormBackendService.create(StormRepository::class.java).find(FriendUserName(text)).subscribeOn(
                 Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -44,7 +74,7 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
                         Log.d("sd", "Successfully registered new chat channel.")
 
                         Toast.makeText(this, it.id, Toast.LENGTH_LONG).show()
-                        val friend = Friend(it.id.toInt(),friendName.text.toString())
+                        val friend = Friend(it.id.toInt(),text)
                         saveFriend(friend)
                         if (!friends.contains(friend)){
                             friends.add(friend)
@@ -59,18 +89,9 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
                     }
                 )
         }
-        val layoutManager = LinearLayoutManager(this)
-        var sceneAdapter = FriendsListViewAdapter(this.applicationContext, friends)
-        sceneAdapter.setClickListener(this)
+        val dialog: AlertDialog = builder.create()
 
-
-        list_rv.layoutManager = layoutManager
-        list_rv.adapter = sceneAdapter
-/*        sendPush.setOnClickListener {
-
-        }*/
-
-
+        dialog.show()
     }
 
     override fun onItemClick(view: View, position: Int) {
@@ -80,17 +101,18 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
         // Set the alert dialog title
         builder.setTitle("Wysłać powiadomienie?")
 
-        builder.setMessage("Treść powiadomienia")
-
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.alert_dialog, null)
         val editText  = dialogLayout.findViewById<EditText>(R.id.editText)
+        editText.maxLines = 7
+        editText.minLines = 5
+        editText.setText("Hej!\nBurza jest niedaleko Ciebie, wejdź do gry!")
         builder.setView(dialogLayout)
         // Display a negative button on alert dialog
-        builder.setNegativeButton("No"){dialog,which ->
+        builder.setNegativeButton("Nie"){dialog,which ->
             Toast.makeText(applicationContext,"Anulowano",Toast.LENGTH_SHORT).show()
         }
-        builder.setPositiveButton("YES"){dialog, which ->
+        builder.setPositiveButton("Tak"){dialog, which ->
             val text = editText.text.toString()
             val friendId = item.friendId.toString()
             val myId = myId.toString()

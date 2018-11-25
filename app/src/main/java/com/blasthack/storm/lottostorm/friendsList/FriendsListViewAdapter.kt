@@ -28,25 +28,24 @@ class FriendsListViewAdapter internal constructor(
     }
 
     override fun onBindViewHolder(holder: TitleViewHolder, position: Int) {
-        val coupon = friends[position]
+        val friend = friends[position]
         val random = Random()
 
         fun rand(from: Int, to: Int) : Int {
             return random.nextInt(to - from) + from
         }
 
-        val names = listOf("Jan Szewiec", "Kamil Korczan", "Agnieszka Gackowska", "Karolina Drabs", "Dawid Podmma")
-        holder.nameView.text = names.get(rand(0,5))
+        rand(0,2)
+        holder.nameView.text = friend.friendName
 
 
-/*        if (participant.photoBlob != null) {
-            val decodedByte = Base64.decode(participant.photoBlob, 0)
-            val bm = BitmapFactory.decodeByteArray(decodedByte, 0, decodedByte.size)
-            holder.photoView.setImageBitmap(bm)
-        } else {
-            holder.initialsView.text = participant.getInitials()
-            holder.initialsView.visibility = View.VISIBLE
-        }*/
+        holder.photoView.setImageResource(R.drawable.photo1)
+        if (friend.friendId == 1){
+            holder.photoView.setImageResource(R.drawable.photo2)
+        }
+        if (friend.friendId == 2){
+            holder.photoView.setImageResource(R.drawable.photo3)
+        }
     }
 
     override fun getItemCount(): Int {
@@ -57,7 +56,6 @@ class FriendsListViewAdapter internal constructor(
         var nameView: TextView = itemView.findViewById(R.id.lecturer_tv)
         var photoView: ImageView = itemView.findViewById(R.id.lecturer_iv)
         var initialsView: TextView = itemView.findViewById(R.id.initials_tv)
-        var lecturerDescription: TextView = itemView.findViewById(R.id.lecturerDescription)
 
 
         init {
