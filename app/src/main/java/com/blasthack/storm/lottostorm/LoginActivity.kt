@@ -32,9 +32,6 @@ class LoginActivity : AppCompatActivity() {
             }
 
             registerPush(username, token)
-
-            val intent = Intent(applicationContext, MapsActivity::class.java)
-            startActivity(intent)
         }
     }
 
@@ -49,6 +46,12 @@ class LoginActivity : AppCompatActivity() {
 
                     Config.client.name = username
                     Config.client.id = it.id.toInt()
+
+                    val preferencesHelper = PreferencesHelper(this)
+                    preferencesHelper.myId = it.id
+
+                    val intent = Intent(applicationContext, MapsActivity::class.java)
+                    startActivity(intent)
                 },
                 { _: Throwable? ->
                     Log.d("PUSH", "Failed to register new chat channel!")

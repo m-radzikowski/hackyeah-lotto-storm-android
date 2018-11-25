@@ -4,8 +4,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.widget.EditText
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.blasthack.storm.lottostorm.PreferencesHelper
 import com.blasthack.storm.lottostorm.R
 import com.blasthack.storm.lottostorm.database.AppDatabase
 import com.blasthack.storm.lottostorm.database.friend.Friend
@@ -20,10 +23,13 @@ import kotlinx.coroutines.runBlocking
 class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemClickListener {
 
     private lateinit var friends: MutableList<Friend>
-
+    private var myId = 1
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_notify_friend)
+        val preferencesHelper = PreferencesHelper(this)
+
+        myId = preferencesHelper.myId.toInt()
 
         friends = mutableListOf()
         fetchData()
@@ -61,7 +67,34 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
         list_rv.layoutManager = layoutManager
         list_rv.adapter = sceneAdapter
 /*        sendPush.setOnClickListener {
-            StormBackendService.create(StormRepository::class.java).sendNotification(NotifyFriendBody(1.toString(),3.toString(),"cos wysylam ci"))                .subscribeOn(
+
+        }*/
+
+
+    }
+
+    override fun onItemClick(view: View, position: Int) {
+        val item = (list_rv.adapter as FriendsListViewAdapter).getItem(position)
+        val builder = AlertDialog.Builder(this)
+
+        // Set the alert dialog title
+        builder.setTitle("Wysłać powiadomienie?")
+
+        builder.setMessage("Treść powiadomienia")
+
+        val inflater = layoutInflater
+        val dialogLayout = inflater.inflate(R.layout.alert_dialog, null)
+        val editText  = dialogLayout.findViewById<EditText>(R.id.editText)
+        builder.setView(dialogLayout)
+        // Display a negative button on alert dialog
+        builder.setNegativeButton("No"){dialog,which ->
+            Toast.makeText(applicationContext,"Anulowano",Toast.LENGTH_SHORT).show()
+        }
+        builder.setPositiveButton("YES"){dialog, which ->
+            val text = editText.text.toString()
+            val friendId = item.friendId.toString()
+            val myId = myId.toString()
+            StormBackendService.create(StormRepository::class.java).sendNotification(NotifyFriendBody(myId,friendId,text)).subscribeOn(
                 Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -76,14 +109,10 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
                         Toast.makeText(this, "Nie znaleziono użytkownika o takiej nazwie.", Toast.LENGTH_LONG).show()
                     }
                 )
-        }*/
+        }
+        val dialog: AlertDialog = builder.create()
 
-
-    }
-
-    override fun onItemClick(view: View, position: Int) {
-        val item = (list_rv.adapter as FriendsListViewAdapter).getItem(position)
-
+        dialog.show()
     }
 
     private fun updateFriendList() {
