@@ -1,6 +1,7 @@
-package com.blasthack.storm.lottostorm
+package com.blasthack.storm.lottostorm.network
 
 import android.util.Log
+import com.blasthack.storm.lottostorm.map.StormEventListener
 import com.blasthack.storm.lottostorm.dto.LotteryWinner
 import com.blasthack.storm.lottostorm.dto.Storm
 import com.squareup.moshi.Moshi
@@ -38,6 +39,7 @@ class StormBackendWebSocketListener(var listener: StormEventListener) : WebSocke
     override fun onClosing(webSocket: WebSocket?, code: Int, reason: String?) {
         webSocket!!.close(1000, null)
         Log.d("SOCKET", "Closing : $code / $reason")
+        listener.onConnectionFailed()
     }
 
     override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {

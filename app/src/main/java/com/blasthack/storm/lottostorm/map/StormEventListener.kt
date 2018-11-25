@@ -1,4 +1,4 @@
-package com.blasthack.storm.lottostorm
+package com.blasthack.storm.lottostorm.map
 
 import com.blasthack.storm.lottostorm.dto.LotteryWinner
 import com.blasthack.storm.lottostorm.dto.Storm
