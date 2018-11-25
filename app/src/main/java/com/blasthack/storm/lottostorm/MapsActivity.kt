@@ -2,6 +2,7 @@ package com.blasthack.storm.lottostorm
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.AlertDialog
 import android.app.Dialog
 import android.content.res.ColorStateList
 import android.content.Intent
@@ -94,12 +95,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        // TODO: not always working (get balance)
         getBalance()
         connectToWebSocket()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-
         mMap = googleMap
         mMap.moveCamera(
             CameraUpdateFactory.newCameraPosition(
@@ -145,13 +146,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
                 foundStorm.removeFromMap()
                 storms.remove(foundStorm)
             }
+            if (Config.client.id.toLong() == winner.ticket.userId) {
+                val alertDialog = AlertDialog.Builder(this).create()
+                alertDialog.setTitle("Wygrana")
+                alertDialog.setMessage("Gratulacje! Burza skumuluwała sie i zalała cię hajsem. Zgarnąłeś X PLN!")
+                alertDialog.show()
+            } else {
+                showInfoSnackBar(getString(R.string.lottery_finished))
+            }
 
-            showInfoSnackBar(getString(R.string.lottery_finished))
-
-            val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.flash, R.color.colorYellow)
+            val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.flash, android.R.color.holo_red_dark)
             mMap.addGroundOverlay(GroundOverlayOptions().apply {
                 image(BitmapDescriptorFactory.fromBitmap(bitmap))
-                position(LatLng(winner.storm.lat, winner.storm.lng), 200f, 200f)
+                position(LatLng(winner.storm.lat, winner.storm.lng), 1500f, 1500f)
             })
         }
     }
@@ -212,15 +219,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
     }
 
     private fun participateInLottery() {
+        if (Config.client.balance <= 0) {
+            showInfoSnackBar("Brak kuponów! Zakup więcej aby zagrać.")
+            return
+        }
+
         val ticket = LotteryTicket(1, playerPosition.longitude, playerPosition.latitude)
         val moshi = Moshi.Builder().build()
         val jsonAdapter = moshi.adapter(LotteryTicket::class.java)
         val json = jsonAdapter.toJson(ticket)
         socket.send(json)
 
-        // TODO: reduce tickets?
-        //Config.client.balance = it.balance
-        //tickets_count.text = Config.client.balance.toString()
+        Config.client.balance = Config.client.balance--
+        tickets_count.text = Config.client.balance.toString()
 
         blockLotteryButton()
     }
@@ -235,7 +246,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
                 unlockLotteryButton()
                 cancel()
             } else {
-                updateLockedLotteryButton("Locked for $playerLockRemainingTime")
+                updateLockedLotteryButton("Graj dalej za $playerLockRemainingTime")
             }
         }
     }

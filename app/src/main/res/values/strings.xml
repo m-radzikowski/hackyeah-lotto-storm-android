@@ -3,7 +3,7 @@
     <string name="title_activity_maps">Map</string>
 
     <string name="lottery_enter">Spróbuj szczęścia!</string>
-    <string name="lottery_ask">Wybierz ilość</string>
+    <string name="lottery_ask">Dodaj kupony</string>
     <string name="lottery_play">Zagraj</string>
     <string name="lottery_cancel">Anuluj</string>
     <string name="lottery_inform">Powiadom innych o burzy</string>
