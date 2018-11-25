@@ -2,7 +2,6 @@
 <androidx.coordinatorlayout.widget.CoordinatorLayout
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/login_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -10,7 +9,6 @@
         android:clickable="true"
         android:focusable="true"
         android:focusableInTouchMode="true">
-
 
     <LinearLayout
             android:layout_width="match_parent"
@@ -53,10 +51,10 @@
                 app:iconPadding="12dp"
                 android:text="Dodaj Znajomego"
                 app:iconSize="24dp"
+                app:icon="@drawable/invite"
                 app:iconTint="@color/colorAccent"
                 app:strokeColor="@color/colorAccent"
                 app:strokeWidth="2dp"/>
-
 
 
         <com.google.android.material.button.MaterialButton
@@ -66,11 +64,13 @@
                 android:layout_marginBottom="5dp"
                 android:paddingTop="0dp"
                 android:paddingBottom="0dp"
-                android:textColor="@color/colorAccent"
-                app:icon="@drawable/facebook"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/colorAccent"
+                app:icon="@drawable/send"
+                app:iconTint="@android:color/white"
                 app:cornerRadius="32dp"
                 app:iconPadding="12dp"
-                android:text="Zaproś znajomego do gry"
+                android:text="Zaproś znajomego"
                 app:iconSize="24dp"
                 app:strokeColor="@color/colorAccent"
                 app:strokeWidth="2dp"/>
