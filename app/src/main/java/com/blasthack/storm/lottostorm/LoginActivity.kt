@@ -49,28 +49,10 @@ class LoginActivity : AppCompatActivity() {
 
                     Config.client.name = username
                     Config.client.id = it.id.toInt()
-
-                    getBalance()
                 },
                 { _: Throwable? ->
                     Log.d("PUSH", "Failed to register new chat channel!")
                 }
             )
     }
-
-    private fun getBalance() {
-        StormBackendService.create(StormRepository::class.java)
-            .getCoupons(Config.client.id)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                {
-                    Config.client.balance = it.balance
-                },
-                { _: Throwable? ->
-                    Log.d("COUPONS", "Failed to update coupons!")
-                }
-            )
-    }
-
 }

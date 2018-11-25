@@ -1,9 +1,11 @@
 package com.blasthack.storm.lottostorm
 
+import android.Manifest
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.res.ColorStateList
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -55,12 +57,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     private var storms: ArrayList<StormCircle> = arrayListOf()
 
-    // TODO: we have hard coded player location
     private var playerPosition = LatLng(52.2922104, 21.0023798)
-    private var playerCameraPosition: CameraPosition = CameraPosition.Builder()
-        .target(playerPosition)
-        .zoom(10.0f)
-        .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,7 +73,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
         center.setOnClickListener {
             if (::mMap.isInitialized) {
-                mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
+                mMap.moveCamera(
+                    CameraUpdateFactory.newCameraPosition(
+                        CameraPosition.Builder()
+                            .target(playerPosition)
+                            .zoom(12.0f)
+                            .build()
+                    )
+                )
             }
         }
 
@@ -90,15 +94,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
+        getBalance()
         connectToWebSocket()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
-        val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.circle, R.color.colorAccent)
 
         mMap = googleMap
-        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
-        mMap.addMarker(MarkerOptions().position(playerPosition).icon(BitmapDescriptorFactory.fromBitmap(bitmap)))
+        mMap.moveCamera(
+            CameraUpdateFactory.newCameraPosition(
+                CameraPosition.Builder()
+                    .target(playerPosition)
+                    .zoom(10.0f)
+                    .build()
+            )
+        )
+        startLocalization()
     }
 
     override fun onStormChanged(storm: Storm) {
@@ -149,6 +160,19 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         showStatusSnackBar(getString(R.string.connection_failed), getString(R.string.reconnect))
     }
 
+    private fun startLocalization() {
+        if (ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.ACCESS_FINE_LOCATION
+            ) == PackageManager.PERMISSION_GRANTED
+        ) {
+            mMap.isMyLocationEnabled = true
+            mMap.setOnMyLocationChangeListener { playerPosition = LatLng(it.latitude, it.longitude) }
+        } else {
+            showStatusSnackBar("Lokalizacja wyłączona", "Włącz")
+        }
+    }
+
     private fun connectToWebSocket() {
         val client = OkHttpClient()
         val listener = StormBackendWebSocketListener(this)
@@ -193,6 +217,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         val jsonAdapter = moshi.adapter(LotteryTicket::class.java)
         val json = jsonAdapter.toJson(ticket)
         socket.send(json)
+
+        // TODO: reduce tickets?
+        //Config.client.balance = it.balance
+        //tickets_count.text = Config.client.balance.toString()
 
         blockLotteryButton()
     }
@@ -241,6 +269,22 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
             fab.icon = getDrawable(R.drawable.cancel)
             fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorGrey))
         }
+    }
+
+    private fun getBalance() {
+        StormBackendService.create(StormRepository::class.java)
+            .getCoupons(Config.client.id)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    Config.client.balance = it.balance
+                    tickets_count.text = Config.client.balance.toString()
+                },
+                { _: Throwable? ->
+                    Log.d("COUPONS", "Failed to update coupons!")
+                }
+            )
     }
 
     private fun showInfoSnackBar(text: String) {
