@@ -120,7 +120,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         runOnUiThread {
             val foundStorm = storms.find { it.id == storm.id }
             if (foundStorm == null) {
-                val newStormCircle = StormCircle(this, storm.id, LatLng(storm.lat, storm.lng))
+                val newStormCircle = StormCircle(this, storm.id, storms.size, LatLng(storm.lat, storm.lng))
                 newStormCircle.addToMap(mMap)
                 storms.add(newStormCircle)
             } else {
@@ -231,7 +231,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         val json = jsonAdapter.toJson(ticket)
         socket.send(json)
 
-        Config.client.balance = Config.client.balance--
+        Config.client.balance--
         tickets_count.text = Config.client.balance.toString()
 
         blockLotteryButton()

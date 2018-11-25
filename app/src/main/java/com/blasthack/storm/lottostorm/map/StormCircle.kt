@@ -11,10 +11,13 @@ import com.blasthack.storm.lottostorm.utils.BitmapUtils
 class StormCircle(
     private var context: Context,
     var id: String,
+    var index: Number,
     private var centerPosition: LatLng
 ) {
 
     private lateinit var storm: GroundOverlay
+
+    var width = (Config.DEFAULT_GROUND_SIZE).toFloat()
 
     fun setCenter(center: LatLng) {
         centerPosition = center
@@ -26,10 +29,18 @@ class StormCircle(
     }
 
     fun addToMap(map: GoogleMap) {
-        val bitmap = BitmapUtils.drawableToBitmap(context, R.drawable.cloud_2, R.color.stormColor)
+        var bitmap = BitmapUtils.drawableToBitmap(context, R.drawable.cloud_2, R.color.stormColor)
+
+        if (index == 0) {
+            width *= 2
+            bitmap = BitmapUtils.drawableToBitmap(context, R.drawable.cloud_2, R.color.colorOrange)
+        } else if (index == 1) {
+            width *= 1.5f
+            bitmap = BitmapUtils.drawableToBitmap(context, R.drawable.cloud_2, R.color.colorGreen)
+        }
         storm = map.addGroundOverlay(GroundOverlayOptions().apply {
             image(BitmapDescriptorFactory.fromBitmap(bitmap))
-            position(centerPosition, (Config.DEFAULT_GROUND_SIZE).toFloat(), (Config.DEFAULT_GROUND_SIZE).toFloat())
+            position(centerPosition, width, width)
         })
     }
 
@@ -46,6 +57,6 @@ class StormCircle(
             centerPosition.longitude,
             distance
         )
-        return distance[0] <= (Config.DEFAULT_GROUND_SIZE / 2)
+        return distance[0] <= (width / 2)
     }
 }

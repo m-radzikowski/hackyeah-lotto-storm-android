@@ -48,7 +48,7 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
 
     }
 
-    fun addFriendDialog(){
+    fun addFriendDialog() {
         val builder = AlertDialog.Builder(this)
 
         // Set the alert dialog title
@@ -57,27 +57,30 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
 
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.alert_dialog, null)
-        val editText  = dialogLayout.findViewById<EditText>(R.id.editText)
+        val editText = dialogLayout.findViewById<EditText>(R.id.editText)
         editText.hint = "Podaj nazwę użytkownika"
         builder.setView(dialogLayout)
         // Display a negative button on alert dialog
-        builder.setNegativeButton("Nie"){dialog,which ->
-            Toast.makeText(applicationContext,"Anulowano",Toast.LENGTH_SHORT).show()
+        builder.setNegativeButton("Nie") { dialog, which ->
+            //Toast.makeText(applicationContext, "Anulowano", Toast.LENGTH_SHORT).show()
         }
-        builder.setPositiveButton("Tak"){dialog, which ->
+        builder.setPositiveButton("Tak") { dialog, which ->
             val text = editText.text.toString()
             StormBackendService.create(StormRepository::class.java).find(FriendUserName(text)).subscribeOn(
-                Schedulers.io())
+                Schedulers.io()
+            )
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
                         Log.d("sd", "Successfully registered new chat channel.")
 
-                        Toast.makeText(this, it.id, Toast.LENGTH_LONG).show()
-                        val friend = Friend(it.id.toInt(),text)
+                        //Toast.makeText(this, it.id, Toast.LENGTH_LONG).show()
+                        val friend = Friend(it.id.toInt(), text)
                         saveFriend(friend)
-                        if (!friends.contains(friend)){
+                        if (!friends.contains(friend)) {
                             friends.add(friend)
+
+                            empty.visibility = View.GONE
                             updateFriendList()
                         }
 
@@ -85,7 +88,7 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
                     { _: Throwable? ->
                         Log.d("ssd", "Failed to register new chat channel!")
 
-                        Toast.makeText(this, "Nie znaleziono użytkownika o takiej nazwie.", Toast.LENGTH_LONG).show()
+                        //Toast.makeText(this, "Nie znaleziono użytkownika o takiej nazwie.", Toast.LENGTH_LONG).show()
                     }
                 )
         }
@@ -103,32 +106,34 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
 
         val inflater = layoutInflater
         val dialogLayout = inflater.inflate(R.layout.alert_dialog, null)
-        val editText  = dialogLayout.findViewById<EditText>(R.id.editText)
+        val editText = dialogLayout.findViewById<EditText>(R.id.editText)
         editText.maxLines = 7
         editText.minLines = 5
-        editText.setText("Hej!\nBurza jest niedaleko Ciebie, wejdź do gry!")
+        editText.setText("Hej! Burza jest niedaleko Ciebie, wejdź do gry!")
         builder.setView(dialogLayout)
         // Display a negative button on alert dialog
-        builder.setNegativeButton("Nie"){dialog,which ->
-            Toast.makeText(applicationContext,"Anulowano",Toast.LENGTH_SHORT).show()
+        builder.setNegativeButton("Nie") { dialog, which ->
+            //Toast.makeText(applicationContext, "Anulowano", Toast.LENGTH_SHORT).show()
         }
-        builder.setPositiveButton("Tak"){dialog, which ->
+        builder.setPositiveButton("Tak") { dialog, which ->
             val text = editText.text.toString()
             val friendId = item.friendId.toString()
             val myId = myId.toString()
-            StormBackendService.create(StormRepository::class.java).sendNotification(NotifyFriendBody(myId,friendId,text)).subscribeOn(
-                Schedulers.io())
+            StormBackendService.create(StormRepository::class.java)
+                .sendNotification(NotifyFriendBody(myId, friendId, text)).subscribeOn(
+                Schedulers.io()
+            )
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
                     {
                         Log.d("sd", "Successfully registered new chat channel.")
-                        Toast.makeText(this, "udało się", Toast.LENGTH_LONG).show()
+                        //Toast.makeText(this, "udało się", Toast.LENGTH_LONG).show()
 
                     },
                     { _: Throwable? ->
                         Log.d("ssd", "Failed to register new chat channel!")
 
-                        Toast.makeText(this, "Nie znaleziono użytkownika o takiej nazwie.", Toast.LENGTH_LONG).show()
+                        //Toast.makeText(this, "Nie znaleziono użytkownika o takiej nazwie.", Toast.LENGTH_LONG).show()
                     }
                 )
         }
@@ -147,6 +152,10 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
     private fun fetchData() = runBlocking {
         val job = GlobalScope.launch {
             friends = AppDatabase.getInstance(applicationContext).friendDao().getFriends() as MutableList<Friend>
+
+            if (friends.size > 0) {
+                empty.visibility = View.GONE
+            }
         }
         job.join()
     }
@@ -157,7 +166,6 @@ class NotifyFriendActivity : AppCompatActivity(), FriendsListViewAdapter.ItemCli
         }
         job.join()
     }
-
 
 
 }
