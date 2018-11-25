@@ -44,7 +44,7 @@
 
         <service
                 android:name=".service.NotificationMessageService"
-                tools:ignore="ExportedService">
+                android:stopWithTask="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT"/>
             </intent-filter>

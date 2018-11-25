@@ -16,6 +16,6 @@ interface StormRepository {
     fun find(@Body data: FriendUserName): Single<IdResponse>
 
     @Headers("Accept: application/json", "Accept: application/json")
-    @POST("/rest/v1/notify")
+    @POST("/rest/v1/friend/notify")
     fun sendNotification(@Body data: NotifyFriendBody): Single<IdResponse>
 }

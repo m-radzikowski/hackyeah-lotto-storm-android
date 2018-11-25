@@ -5,12 +5,20 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
+import com.blasthack.storm.lottostorm.database.AppDatabase
+import com.blasthack.storm.lottostorm.database.friend.Friend
+import com.blasthack.storm.lottostorm.database.token.Token
 import com.blasthack.storm.lottostorm.service.PushClient
 import com.blasthack.storm.lottostorm.service.StormBackendService
 import com.blasthack.storm.lottostorm.service.StormRepository
+import com.google.firebase.FirebaseApp
+import com.google.firebase.iid.FirebaseInstanceId
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 
 class LoginActivity : AppCompatActivity() {
 
@@ -23,7 +31,14 @@ class LoginActivity : AppCompatActivity() {
             if (username.isEmpty()){
                 username = "tester"
             }
-            StormBackendService.create(StormRepository::class.java).register(PushClient(username, "qwerty"))                .subscribeOn(
+            val preferencesHelper = PreferencesHelper(this)
+            FirebaseApp.initializeApp(this)
+            var token = preferencesHelper.deviceToken
+            if (token == null){
+                token = "cos"
+            }
+
+            StormBackendService.create(StormRepository::class.java).register(PushClient(username, token)).subscribeOn(
                 Schedulers.io())
                 .observeOn(AndroidSchedulers.mainThread())
                 .subscribe(
@@ -43,4 +58,5 @@ class LoginActivity : AppCompatActivity() {
             startActivity(intent)
         }
     }
+
 }
