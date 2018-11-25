@@ -1,11 +1,21 @@
 package com.blasthack.storm.lottostorm
 
+import android.annotation.SuppressLint
 import android.app.Dialog
+import android.content.res.ColorStateList
+import android.graphics.Color
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.view.Window
-import android.widget.Toast
+import android.widget.TextView
+import androidx.core.content.ContextCompat
+import com.androidadvance.topsnackbar.TSnackbar
+import com.blasthack.storm.lottostorm.dto.LotteryTicket
+import com.blasthack.storm.lottostorm.dto.LotteryWinner
+import com.blasthack.storm.lottostorm.dto.Storm
+import com.blasthack.storm.lottostorm.map.StormCircle
+import com.blasthack.storm.lottostorm.map.StormEventListener
+import com.blasthack.storm.lottostorm.network.StormBackendWebSocketListener
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -18,67 +28,213 @@ import java.util.*
 import kotlin.concurrent.scheduleAtFixedRate
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import okhttp3.WebSocket
+import kotlin.collections.ArrayList
+import com.squareup.moshi.Moshi
+import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.CircleOptions
 
-class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
+
+@SuppressLint("SetTextI18n")
+class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener {
 
     private lateinit var mMap: GoogleMap
-    private val DEFAULT_SCALE = 1000.0
+    private lateinit var socket: WebSocket
 
-    private var globalExpo = LatLng(52.2922104, 21.0023798)
-    private var globalExpoLocation: CameraPosition = CameraPosition.Builder()
-        .target(globalExpo)
-        .zoom(8.0f)
+    private var playerLockRemainingTime = 0
+
+    var statusSnackBar: TSnackbar? = null
+
+    private var storms: ArrayList<StormCircle> = arrayListOf()
+
+    // TODO: we have hard coded player location
+    private var playerPosition = LatLng(52.2922104, 21.0023798)
+    private var playerCameraPosition: CameraPosition = CameraPosition.Builder()
+        .target(playerPosition)
+        .zoom(10.0f)
         .build()
-
-    private lateinit var storm: StormCircle
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
 
         fab.setOnClickListener {
-            showDialog()
+            participateInLottery()
+        }
+
+        tickets.setOnClickListener {
+            showTicketsDialog()
+        }
+
+        center.setOnClickListener {
+            if (::mMap.isInitialized) {
+                mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
+            }
         }
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        val client = OkHttpClient()
-        val listener = StormBackendWebSocketListener()
-        val request = Request.Builder().url(Config.WEBSOCKET_ADDRESS).build()
-        client.newWebSocket(request, listener)
+        connectToWebSocket()
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
+        mMap.addCircle(
+            CircleOptions()
+                .center(playerPosition)
+                .radius(500.0)
+                .strokeColor(ContextCompat.getColor(this, R.color.colorPrimary))
+                .fillColor(ContextCompat.getColor(this, R.color.colorPrimary))
+        )
+    }
 
-        storm = StormCircle(globalExpo)
-        storm.addToMap(mMap)
+    override fun onStormChanged(storm: Storm) {
+        if (!::mMap.isInitialized) {
+            return
+        }
 
-        Timer("StormMockTimer", false).scheduleAtFixedRate(0, (1000 * 0.2).toLong()) {
-            if (::storm.isInitialized) {
-                globalExpo = LatLng(globalExpo.latitude + 0.0025, globalExpo.longitude + 0.0025)
-                runOnUiThread {
-                    storm.setCenter(globalExpo)
-                    Log.d("MAPS", "Updated storm location")
-                }
+        runOnUiThread {
+            val foundStorm = storms.find { it.id == storm.id }
+            if (foundStorm == null) {
+                val newStormCircle =
+                    StormCircle(this, storm.id, LatLng(storm.lat, storm.lng))
+                newStormCircle.addToMap(mMap)
+                storms.add(newStormCircle)
+            } else {
+                foundStorm.setCenter(LatLng(storm.lat, storm.lng))
+                foundStorm.addRotation()
             }
         }
 
-        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(globalExpoLocation))
+        if (playerLockRemainingTime <= 0) {
+            if (canPlayerParticipate()) {
+                unlockLotteryButton()
+            } else {
+                updateLockedLotteryButton(getString(R.string.lottery_invalid))
+            }
+        }
     }
 
-    private fun showDialog() {
+    override fun onStormWon(winner: LotteryWinner) {
+        if (!::mMap.isInitialized) {
+            return
+        }
+
+        runOnUiThread {
+            val foundStorm = storms.find { it.id == winner.storm.id }
+            if (foundStorm != null) {
+                foundStorm.removeFromMap()
+                storms.remove(foundStorm)
+            }
+
+            showInfoSnackBar(getString(R.string.lottery_finished))
+        }
+    }
+
+    override fun onConnectionFailed() {
+        showStatusSnackBar(getString(R.string.connection_failed), getString(R.string.reconnect))
+    }
+
+    private fun connectToWebSocket() {
+        val client = OkHttpClient()
+        val listener = StormBackendWebSocketListener(this)
+        val request = Request.Builder().url(Config.WEBSOCKET_ADDRESS).build()
+        socket = client.newWebSocket(request, listener)
+    }
+
+    private fun showTicketsDialog() {
         val dialogs = Dialog(this)
         dialogs.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialogs.setContentView(R.layout.dialog_lottery)
         dialogs.findViewById<MaterialButton>(R.id.lottery_play).setOnClickListener {
-            Toast.makeText(this, "You have entered lottery!", Toast.LENGTH_LONG).show()
+            dialogs.dismiss()
         }
         dialogs.findViewById<MaterialButton>(R.id.lottery_cancel).setOnClickListener {
             dialogs.dismiss()
         }
         dialogs.show()
+    }
+
+    private fun participateInLottery() {
+        val ticket = LotteryTicket(1, playerPosition.longitude, playerPosition.latitude)
+        val moshi = Moshi.Builder().build()
+        val jsonAdapter = moshi.adapter(LotteryTicket::class.java)
+        val json = jsonAdapter.toJson(ticket)
+        socket.send(json)
+
+        blockLotteryButton()
+    }
+
+    private fun blockLotteryButton() {
+        playerLockRemainingTime = 3
+        updateLockedLotteryButton("Locked for $playerLockRemainingTime")
+
+        Timer("LotteryLock", false).scheduleAtFixedRate(0, (1000 * 1).toLong()) {
+            playerLockRemainingTime--
+            if (playerLockRemainingTime <= 0) {
+                unlockLotteryButton()
+                cancel()
+            } else {
+                updateLockedLotteryButton("Locked for $playerLockRemainingTime")
+            }
+        }
+    }
+
+    private fun unlockLotteryButton() {
+        runOnUiThread {
+            if (canPlayerParticipate()) {
+                fab.isEnabled = true
+                fab.text = getString(R.string.lottery_enter)
+                fab.icon = getDrawable(R.drawable.clover)
+                fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorAccent))
+            } else {
+                updateLockedLotteryButton(getString(R.string.lottery_invalid))
+            }
+        }
+    }
+
+    private fun canPlayerParticipate(): Boolean {
+        storms.forEach {
+            if (it.containsPlayer(playerPosition)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun updateLockedLotteryButton(text: String) {
+        runOnUiThread {
+            fab.isEnabled = false
+            fab.text = text
+            fab.icon = getDrawable(R.drawable.cancel)
+            fab.backgroundTintList = ColorStateList.valueOf(ContextCompat.getColor(this, R.color.colorGrey))
+        }
+    }
+
+    private fun showInfoSnackBar(text: String) {
+        val snackBar = TSnackbar.make(root, text, TSnackbar.LENGTH_LONG)
+        val snackBarView = snackBar.view
+        snackBarView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary))
+        snackBarView.setPadding(4, 4, 4, 4)
+        val textView = snackBarView.findViewById<TextView>(com.androidadvance.topsnackbar.R.id.snackbar_text)
+        textView.setTextColor(Color.WHITE)
+        textView.textSize = 16f
+        snackBar.show()
+    }
+
+    private fun showStatusSnackBar(text: String, action: String) {
+        statusSnackBar = TSnackbar.make(root, text, TSnackbar.LENGTH_INDEFINITE).setAction(action) {
+            connectToWebSocket()
+        }
+        statusSnackBar!!.setActionTextColor(Color.WHITE)
+        val snackBarView = statusSnackBar!!.view
+        snackBarView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary))
+        snackBarView.setPadding(4, 4, 4, 4)
+        val textView = snackBarView.findViewById<TextView>(com.androidadvance.topsnackbar.R.id.snackbar_text)
+        textView.setTextColor(Color.WHITE)
+        textView.textSize = 16f
+        statusSnackBar!!.show()
     }
 }

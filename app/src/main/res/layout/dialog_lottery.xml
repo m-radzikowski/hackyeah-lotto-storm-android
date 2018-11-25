@@ -2,8 +2,9 @@
 <LinearLayout
         xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"
         android:orientation="vertical"
-        android:layout_width="250dp"
+        android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:gravity="center_horizontal"
         android:padding="20dp">
 
     <TextView
@@ -15,7 +16,6 @@
 
     <com.shawnlin.numberpicker.NumberPicker
             android:id="@+id/number_picker"
-            android:visibility="gone"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center_horizontal"
@@ -32,6 +32,7 @@
     <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:layout_marginTop="25dp"
             android:orientation="horizontal">
 
         <com.google.android.material.button.MaterialButton
@@ -50,7 +51,7 @@
                 android:layout_height="wrap_content"
                 android:layout_margin="8dp"
                 android:layout_gravity="center_horizontal"
-                android:text="@string/lottery_play"
+                android:text="@string/lottery_buy"
                 android:textSize="16sp"/>
     </LinearLayout>
 

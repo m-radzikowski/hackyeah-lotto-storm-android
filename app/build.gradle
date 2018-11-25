@@ -24,13 +24,16 @@ android {
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
-    implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.appcompat:appcompat:1.0.2'
     implementation 'com.google.android.material:material:1.0.0'
     implementation 'com.shawnlin:number-picker:2.4.7'
+    implementation 'com.androidadvance:topsnackbar:1.1.1'
 
     implementation 'com.google.android.gms:play-services-maps:16.0.0'
+    implementation 'com.google.maps.android:android-maps-utils:0.5+'
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.moshi:moshi-kotlin:1.8.0'
 
     testImplementation 'junit:junit:4.12'
 

@@ -3,6 +3,7 @@
         xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
         xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/root"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -14,19 +15,39 @@
             android:name="com.google.android.gms.maps.SupportMapFragment"/>
 
     <com.google.android.material.chip.Chip
+            android:id="@+id/inform"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Powiadom o burzy"
-            app:chipStrokeColor="@android:color/black"
+            android:text="@string/lottery_inform"
+            app:chipIcon="@drawable/alarm"
+            app:chipIconTint="@color/colorAccent"
             app:chipBackgroundColor="@android:color/white"
-            android:padding="4dp"
+            android:padding="16dp"
             android:layout_margin="8dp"
-            android:textColor="@android:color/holo_red_dark"/>
+            android:textColor="@color/colorAccent"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/tickets"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:src="@drawable/ticket"
+            app:fabSize="normal"
+            android:layout_margin="8dp"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/center"
+            android:layout_marginTop="80dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/gps"
+            app:fabSize="mini"
+            android:layout_gravity="end" android:layout_marginEnd="16dp"/>
 
     <!-- It will NOT work without the style applied -->
     <com.google.android.material.button.MaterialButton
             android:id="@+id/fab"
-            android:layout_width="wrap_content"
+            android:layout_width="250dp"
             android:layout_height="64dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
