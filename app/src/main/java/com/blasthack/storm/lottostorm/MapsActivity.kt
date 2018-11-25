@@ -3,10 +3,11 @@ package com.blasthack.storm.lottostorm
 import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.res.ColorStateList
-import android.graphics.Color
 import android.content.Intent
+import android.graphics.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.Window
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -18,6 +19,9 @@ import com.blasthack.storm.lottostorm.map.StormCircle
 import com.blasthack.storm.lottostorm.map.StormEventListener
 import com.blasthack.storm.lottostorm.network.StormBackendWebSocketListener
 import com.blasthack.storm.lottostorm.service.NotifyFriendActivity
+import com.blasthack.storm.lottostorm.service.StormBackendService
+import com.blasthack.storm.lottostorm.service.StormRepository
+import com.blasthack.storm.lottostorm.utils.BitmapUtils
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -34,7 +38,9 @@ import okhttp3.WebSocket
 import kotlin.collections.ArrayList
 import com.squareup.moshi.Moshi
 import com.google.android.gms.maps.model.LatLng
-import com.google.android.gms.maps.model.CircleOptions
+import com.shawnlin.numberpicker.NumberPicker
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.schedulers.Schedulers
 
 
 @SuppressLint("SetTextI18n")
@@ -78,6 +84,9 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
             val intent = Intent(applicationContext, NotifyFriendActivity::class.java)
             startActivity(intent)
         }
+
+        tickets_count.text = Config.client.balance.toString()
+
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
@@ -85,15 +94,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
     }
 
     override fun onMapReady(googleMap: GoogleMap) {
+        val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.circle, R.color.colorAccent)
+
         mMap = googleMap
         mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
-        mMap.addCircle(
-            CircleOptions()
-                .center(playerPosition)
-                .radius(500.0)
-                .strokeColor(ContextCompat.getColor(this, R.color.colorPrimary))
-                .fillColor(ContextCompat.getColor(this, R.color.colorPrimary))
-        )
+        mMap.addMarker(MarkerOptions().position(playerPosition).icon(BitmapDescriptorFactory.fromBitmap(bitmap)))
     }
 
     override fun onStormChanged(storm: Storm) {
@@ -104,8 +109,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         runOnUiThread {
             val foundStorm = storms.find { it.id == storm.id }
             if (foundStorm == null) {
-                val newStormCircle =
-                    StormCircle(this, storm.id, LatLng(storm.lat, storm.lng))
+                val newStormCircle = StormCircle(this, storm.id, LatLng(storm.lat, storm.lng))
                 newStormCircle.addToMap(mMap)
                 storms.add(newStormCircle)
             } else {
@@ -115,11 +119,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         }
 
         if (playerLockRemainingTime <= 0) {
-            if (canPlayerParticipate()) {
-                unlockLotteryButton()
-            } else {
-                updateLockedLotteryButton(getString(R.string.lottery_invalid))
-            }
+            unlockLotteryButton()
         }
     }
 
@@ -136,6 +136,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
             }
 
             showInfoSnackBar(getString(R.string.lottery_finished))
+
+            val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.flash, R.color.colorYellow)
+            mMap.addGroundOverlay(GroundOverlayOptions().apply {
+                image(BitmapDescriptorFactory.fromBitmap(bitmap))
+                position(LatLng(winner.storm.lat, winner.storm.lng), 200f, 200f)
+            })
         }
     }
 
@@ -152,9 +158,27 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     private fun showTicketsDialog() {
         val dialogs = Dialog(this)
+
         dialogs.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialogs.setContentView(R.layout.dialog_lottery)
-        dialogs.findViewById<MaterialButton>(R.id.lottery_play).setOnClickListener {
+        dialogs.findViewById<MaterialButton>(R.id.lottery_play).setOnClickListener { _ ->
+            val couponSelector = dialogs.findViewById<NumberPicker>(R.id.number_picker)
+            StormBackendService.create(StormRepository::class.java)
+                .updateCoupons(Config.client.id, couponSelector.value)
+                .subscribeOn(Schedulers.io())
+                .observeOn(AndroidSchedulers.mainThread())
+                .subscribe(
+                    {
+                        showInfoSnackBar("Doładowano kupony")
+
+                        Config.client.balance = it.balance
+                        tickets_count.text = Config.client.balance.toString()
+                    },
+                    { _: Throwable? ->
+                        Log.d("COUPONS", "Failed to update coupons!")
+                    }
+                )
+
             dialogs.dismiss()
         }
         dialogs.findViewById<MaterialButton>(R.id.lottery_cancel).setOnClickListener {
@@ -175,7 +199,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     private fun blockLotteryButton() {
         playerLockRemainingTime = 3
-        updateLockedLotteryButton("Locked for $playerLockRemainingTime")
+        updateLockedLotteryButton("Graj dalej za $playerLockRemainingTime")
 
         Timer("LotteryLock", false).scheduleAtFixedRate(0, (1000 * 1).toLong()) {
             playerLockRemainingTime--
@@ -220,7 +244,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
     }
 
     private fun showInfoSnackBar(text: String) {
-        val snackBar = TSnackbar.make(root, text, TSnackbar.LENGTH_LONG)
+        val snackBar = TSnackbar.make(root, text, TSnackbar.LENGTH_SHORT)
         val snackBarView = snackBar.view
         snackBarView.setBackgroundColor(ContextCompat.getColor(this, R.color.colorPrimary))
         snackBarView.setPadding(4, 4, 4, 4)

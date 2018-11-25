@@ -4,21 +4,13 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
-import com.blasthack.storm.lottostorm.database.AppDatabase
-import com.blasthack.storm.lottostorm.database.friend.Friend
-import com.blasthack.storm.lottostorm.database.token.Token
 import com.blasthack.storm.lottostorm.service.PushClient
 import com.blasthack.storm.lottostorm.service.StormBackendService
 import com.blasthack.storm.lottostorm.service.StormRepository
 import com.google.firebase.FirebaseApp
-import com.google.firebase.iid.FirebaseInstanceId
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.schedulers.Schedulers
 import kotlinx.android.synthetic.main.activity_login.*
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 
 class LoginActivity : AppCompatActivity() {
 
@@ -26,37 +18,59 @@ class LoginActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_login)
 
-        login_button.setOnClickListener {
+        login_button.setOnClickListener { _ ->
             var username = login_email.text.toString()
-            if (username.isEmpty()){
+            if (username.isEmpty()) {
                 username = "tester"
             }
+
             val preferencesHelper = PreferencesHelper(this)
             FirebaseApp.initializeApp(this)
             var token = preferencesHelper.deviceToken
-            if (token == null){
-                token = "cos"
+            if (token == null) {
+                token = ""
             }
 
-            StormBackendService.create(StormRepository::class.java).register(PushClient(username, token)).subscribeOn(
-                Schedulers.io())
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(
-                    {
-                        Log.d("sd", "Successfully registered new chat channel.")
+            registerPush(username, token)
 
-                        Toast.makeText(this, it.id, Toast.LENGTH_LONG).show()
-
-                    },
-                    { _: Throwable? ->
-                        Log.d("ssd", "Failed to register new chat channel!")
-
-                        Toast.makeText(this, "jakis", Toast.LENGTH_LONG).show()
-                    }
-                )
             val intent = Intent(applicationContext, MapsActivity::class.java)
             startActivity(intent)
         }
+    }
+
+    private fun registerPush(username: String, token: String) {
+        StormBackendService.create(StormRepository::class.java)
+            .register(PushClient(username, token))
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    Log.d("PUSH", "Successfully registered new chat channel.")
+
+                    Config.client.name = username
+                    Config.client.id = it.id.toInt()
+
+                    getBalance()
+                },
+                { _: Throwable? ->
+                    Log.d("PUSH", "Failed to register new chat channel!")
+                }
+            )
+    }
+
+    private fun getBalance() {
+        StormBackendService.create(StormRepository::class.java)
+            .getCoupons(Config.client.id)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                {
+                    Config.client.balance = it.balance
+                },
+                { _: Throwable? ->
+                    Log.d("COUPONS", "Failed to update coupons!")
+                }
+            )
     }
 
 }

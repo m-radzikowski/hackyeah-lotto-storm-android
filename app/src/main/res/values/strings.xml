@@ -5,7 +5,7 @@
     <string name="lottery_enter">Spróbuj szczęścia!</string>
     <string name="lottery_ask">Kup kupony do loterii</string>
     <string name="lottery_play">Zagraj</string>
-    <string name="lottery_cancel">Cancel</string>
+    <string name="lottery_cancel">Anuluj</string>
     <string name="lottery_inform">Powiadom innych o burzy</string>
     <string name="lottery_finished">Wyłoniony zwycięzca</string>
     <string name="lottery_invalid">Poza burzą</string>

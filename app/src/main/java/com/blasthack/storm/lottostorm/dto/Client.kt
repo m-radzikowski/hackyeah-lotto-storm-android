@@ -1,6 +1,7 @@
 package com.blasthack.storm.lottostorm.dto
 
 data class Client(
-    val name: String,
-    val id: Int
+    var name: String,
+    var id: Int,
+    var balance: Long
 )
