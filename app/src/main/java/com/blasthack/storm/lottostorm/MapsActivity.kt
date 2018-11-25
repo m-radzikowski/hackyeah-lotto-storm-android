@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.app.Dialog
 import android.content.res.ColorStateList
 import android.graphics.Color
+import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Window
@@ -16,6 +17,7 @@ import com.blasthack.storm.lottostorm.dto.Storm
 import com.blasthack.storm.lottostorm.map.StormCircle
 import com.blasthack.storm.lottostorm.map.StormEventListener
 import com.blasthack.storm.lottostorm.network.StormBackendWebSocketListener
+import com.blasthack.storm.lottostorm.service.NotifyFriendActivity
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -72,6 +74,10 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
             }
         }
 
+        notifyStorm.setOnClickListener {
+            val intent = Intent(applicationContext, NotifyFriendActivity::class.java)
+            startActivity(intent)
+        }
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
