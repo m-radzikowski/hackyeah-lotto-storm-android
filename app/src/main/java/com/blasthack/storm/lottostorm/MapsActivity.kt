@@ -47,10 +47,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     private var storms: ArrayList<StormCircle> = arrayListOf()
 
-    private var globalExpo = LatLng(52.2922104, 21.0023798)
-    private var globalExpoLocation: CameraPosition = CameraPosition.Builder()
-        .target(globalExpo)
-        .zoom(8.0f)
+    // TODO: we have hard coded player location
+    private var playerPosition = LatLng(52.2922104, 21.0023798)
+    private var playerCameraPosition: CameraPosition = CameraPosition.Builder()
+        .target(playerPosition)
+        .zoom(10.0f)
         .build()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -58,8 +59,17 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         setContentView(R.layout.activity_maps)
 
         fab.setOnClickListener {
-            //showDialog()
             participateInLottery()
+        }
+
+        tickets.setOnClickListener {
+            showTicketsDialog()
+        }
+
+        center.setOnClickListener {
+            if (::mMap.isInitialized) {
+                mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
+            }
         }
 
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
@@ -70,11 +80,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
-        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(globalExpoLocation))
+        mMap.moveCamera(CameraUpdateFactory.newCameraPosition(playerCameraPosition))
         mMap.addCircle(
             CircleOptions()
-                .center(globalExpo)
-                .radius(20.0)
+                .center(playerPosition)
+                .radius(500.0)
                 .strokeColor(ContextCompat.getColor(this, R.color.colorPrimary))
                 .fillColor(ContextCompat.getColor(this, R.color.colorPrimary))
         )
@@ -134,12 +144,11 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         socket = client.newWebSocket(request, listener)
     }
 
-    private fun showDialog() {
+    private fun showTicketsDialog() {
         val dialogs = Dialog(this)
         dialogs.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialogs.setContentView(R.layout.dialog_lottery)
         dialogs.findViewById<MaterialButton>(R.id.lottery_play).setOnClickListener {
-            participateInLottery()
             dialogs.dismiss()
         }
         dialogs.findViewById<MaterialButton>(R.id.lottery_cancel).setOnClickListener {
@@ -149,8 +158,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
     }
 
     private fun participateInLottery() {
-        // TODO: hardcoded data for now
-        val ticket = LotteryTicket(1, 52.2922104, 21.0023798)
+        val ticket = LotteryTicket(1, playerPosition.longitude, playerPosition.latitude)
         val moshi = Moshi.Builder().build()
         val jsonAdapter = moshi.adapter(LotteryTicket::class.java)
         val json = jsonAdapter.toJson(ticket)
@@ -189,7 +197,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     private fun canPlayerParticipate(): Boolean {
         storms.forEach {
-            if (it.containsPlayer(globalExpo)) {
+            if (it.containsPlayer(playerPosition)) {
                 return true
             }
         }

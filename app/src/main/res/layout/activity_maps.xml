@@ -26,6 +26,24 @@
             android:layout_margin="8dp"
             android:textColor="@color/colorAccent"/>
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/tickets"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:src="@drawable/ticket"
+            app:fabSize="normal"
+            android:layout_margin="8dp"/>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/center"
+            android:layout_marginTop="80dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/gps"
+            app:fabSize="mini"
+            android:layout_gravity="end" android:layout_marginEnd="16dp"/>
+
     <!-- It will NOT work without the style applied -->
     <com.google.android.material.button.MaterialButton
             android:id="@+id/fab"
