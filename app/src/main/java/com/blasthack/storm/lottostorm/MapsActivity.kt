@@ -54,7 +54,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
 
     private var playerLockRemainingTime = 0
 
-    var statusSnackBar: TSnackbar? = null
+    private var statusSnackBar: TSnackbar? = null
 
     private var storms: ArrayList<StormCircle> = arrayListOf()
 
@@ -63,7 +63,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
-        val myId = intent.getIntExtra("myId", -1)
 
         fab.setOnClickListener {
             participateInLottery()
@@ -96,7 +95,6 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
         val mapFragment = supportFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        // TODO: not always working (get balance)
         getBalance()
         connectToWebSocket()
     }
@@ -148,15 +146,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
                 storms.remove(foundStorm)
             }
             if (Config.client.id.toLong() == winner.ticket.userId) {
+                val amount = winner.storm.max / 2
                 val alertDialog = AlertDialog.Builder(this).create()
                 alertDialog.setTitle("Wygrana")
-                alertDialog.setMessage("Gratulacje! Burza skumuluwała sie i zalała cię hajsem. Zgarnąłeś X PLN!")
+                alertDialog.setMessage("Gratulacje! Burza skumuluwała sie i zalała cię hajsem. Zgarnąłeś $amount PLN!")
                 alertDialog.show()
             } else {
                 showInfoSnackBar(getString(R.string.lottery_finished))
             }
 
-            val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.flash, android.R.color.holo_red_dark)
+            val bitmap = BitmapUtils.drawableToBitmap(this, R.drawable.flash, R.color.colorOrange)
             mMap.addGroundOverlay(GroundOverlayOptions().apply {
                 image(BitmapDescriptorFactory.fromBitmap(bitmap))
                 position(LatLng(winner.storm.lat, winner.storm.lng), 1500f, 1500f)
@@ -177,7 +176,8 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback, StormEventListener
             mMap.isMyLocationEnabled = true
             mMap.setOnMyLocationChangeListener { playerPosition = LatLng(it.latitude, it.longitude) }
         } else {
-            showStatusSnackBar("Lokalizacja wyłączona", "Włącz")
+            // TODO: we should ask for permision!
+            //showStatusSnackBar("Lokalizacja wyłączona", "Włącz")
         }
     }
 

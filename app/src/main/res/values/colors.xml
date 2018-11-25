@@ -6,6 +6,7 @@
     <color name="colorGrey">#707070</color>
     <color name="colorYellow">#FEDE01</color>
     <color name="colorGreen">#43A047</color>
+    <color name="colorOrange">#fd6102</color>
 
     <color name="stormColor">#7042A5F5</color>
 </resources>
