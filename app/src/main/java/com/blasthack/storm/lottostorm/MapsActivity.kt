@@ -38,6 +38,7 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        val myId = intent.getIntExtra("myId", -1)
 
         fab.setOnClickListener {
             showDialog()

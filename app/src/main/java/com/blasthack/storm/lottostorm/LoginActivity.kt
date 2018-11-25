@@ -46,16 +46,17 @@ class LoginActivity : AppCompatActivity() {
                         Log.d("sd", "Successfully registered new chat channel.")
 
                         Toast.makeText(this, it.id, Toast.LENGTH_LONG).show()
-
+                        preferencesHelper.myId = it.id
+                        val intent = Intent(applicationContext, MapsActivity::class.java)
+                        startActivity(intent)
                     },
                     { _: Throwable? ->
                         Log.d("ssd", "Failed to register new chat channel!")
 
-                        Toast.makeText(this, "jakis", Toast.LENGTH_LONG).show()
+                        Toast.makeText(this, "Backend nie stoi", Toast.LENGTH_LONG).show()
                     }
                 )
-            val intent = Intent(applicationContext, MapsActivity::class.java)
-            startActivity(intent)
+
         }
     }
 
